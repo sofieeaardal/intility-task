@@ -31,13 +31,18 @@ app.put("/api/state", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-initDb()
-  .then(() => {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Intility Task listening on 0.0.0.0:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to initialize database:", err);
-    process.exit(1);
+// Listen immediately so the platform's readiness check succeeds even if the
+// database isn't reachable yet (e.g. no database attached, or it's still
+// provisioning). DB setup happens in the background and retries on failure
+// instead of crashing the process.
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Intility Task listening on 0.0.0.0:${PORT}`);
+});
+
+function initDbWithRetry() {
+  initDb().catch((err) => {
+    console.error("Database not ready yet, retrying in 10s:", err.message);
+    setTimeout(initDbWithRetry, 10000);
   });
+}
+initDbWithRetry();
