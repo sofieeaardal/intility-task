@@ -1,0 +1,4 @@
+node_modules/
+server.log
+seed-data.json
+.env
