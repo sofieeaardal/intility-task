@@ -34,6 +34,27 @@ app.use(identify);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// Shown only for the owner. Minato's SSO contract gives every app a
+// visitor's name and email, but not role/department/photo for anyone
+// (see minato://docs/reference/end-user-identity) — those aren't available
+// to fetch per-user, so they're hardcoded for the one person they're true for.
+const OWNER_SUBTITLE = "Management Graduate • Cloud Infrastructure • Intility AS";
+
+app.get("/api/whoami", (req, res) => {
+  const fullName = req.headers["x-auth-name"] || "there";
+  const firstName = fullName.split(" ")[0];
+  res.json({
+    firstName,
+    subtitle: req.isOwner ? OWNER_SUBTITLE : null,
+    hasAvatar: req.isOwner,
+  });
+});
+
+app.get("/api/avatar", (req, res) => {
+  if (!req.isOwner) return res.sendStatus(404);
+  res.sendFile(path.join(__dirname, "private", "avatar.jpg"));
+});
+
 app.get("/api/state", async (req, res) => {
   if (!req.isOwner) return res.json(EMPTY_STATE);
   try {
