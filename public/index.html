@@ -434,6 +434,11 @@ html:not(.bf-darkmode) .btn-filled { color:#fff; }
         Reminders
         <span class="nav-badge" id="badge-reminders"></span>
       </button>
+      <button class="nav-item" id="nav-postponed" onclick="setView('postponed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Postponed
+        <span class="nav-badge" id="badge-postponed"></span>
+      </button>
       <button class="nav-item" id="nav-archive" onclick="setView('archive')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
         Archive
@@ -585,11 +590,14 @@ function renderSidebar() {
   document.getElementById("badge-all").textContent = active.length;
   document.getElementById("badge-today").textContent = active.filter(t => t.daily).length;
   document.getElementById("badge-archive").textContent = S.todos.filter(t => t.archived).length;
+  const postponedCount = S.todos.filter(t => t.postponedUntil && !t.completed && !t.archived).length;
+  document.getElementById("badge-postponed").textContent = postponedCount > 0 ? postponedCount : "";
   ["all","today","projects","archive"].forEach(v => {
     const el = document.getElementById("nav-" + v);
     if (el) el.className = "nav-item" + (S.view === v ? " active" : "");
   });
   document.getElementById("nav-reminders").className = "nav-item" + (S.view === "reminders" ? " active" : "");
+  document.getElementById("nav-postponed").className = "nav-item" + (S.view === "postponed" ? " active" : "");
 
   document.getElementById("proj-nav").innerHTML = S.projects.map(p => {
     const cnt = S.todos.filter(t => t.project === p.id && !t.completed && !t.archived).length;
@@ -608,11 +616,11 @@ function renderSidebar() {
 }
 
 function renderMain() {
-  const TITLES = { all: "All Tasks", today: "Daily Focus", projects: "Projects", archive: "Archive", reminders: "Reminders" };
+  const TITLES = { all: "All Tasks", today: "Daily Focus", projects: "Projects", archive: "Archive", reminders: "Reminders", postponed: "Postponed" };
   const proj = S.projects.find(p => p.id === S.view);
   document.getElementById("view-title").textContent = TITLES[S.view] || (proj ? proj.name : S.view);
   const tr = document.getElementById("topbar-right");
-  if (S.view !== "projects" && S.view !== "archive" && S.view !== "reminders") {
+  if (S.view !== "projects" && S.view !== "archive" && S.view !== "reminders" && S.view !== "postponed") {
     tr.innerHTML = `<div class="sort-toggle">
       ${["priority","due","created"].map(s =>
         `<button class="sort-btn${S.sort===s?" active":""}" onclick="setSort('${s}')">${s==="priority"?"Priority":s==="due"?"Due date":"Created"}</button>`
@@ -623,15 +631,21 @@ function renderMain() {
   if (S.view === "archive")   { mc.innerHTML = renderArchive(); return; }
   if (S.view === "projects")  { mc.innerHTML = renderProjectsView(); return; }
   if (S.view === "reminders") { mc.innerHTML = renderRemindersView(); return; }
+  if (S.view === "postponed") { mc.innerHTML = renderPostponedView(); return; }
   mc.innerHTML = renderListView();
 }
 
+function isPostponeWaiting(t) { return !!t.postponedUntil && new Date(t.postponedUntil) > new Date(); }
+function isPostponeReturned(t) { return !!t.postponedUntil && new Date(t.postponedUntil) <= new Date(); }
+
 function getTodos(projectFilter) {
-  let todos = S.todos.filter(t => !t.archived && !t.completed);
+  let todos = S.todos.filter(t => !t.archived && !t.completed && !isPostponeWaiting(t));
   if (projectFilter) todos = todos.filter(t => t.project === projectFilter);
   else if (S.view === "today") todos = todos.filter(t => t.daily);
   else if (S.view !== "all" && S.view !== "projects") todos = todos.filter(t => t.project === S.view);
   todos.sort((a,b) => {
+    const ar = isPostponeReturned(a), br = isPostponeReturned(b);
+    if (ar !== br) return ar ? -1 : 1;
     if (S.sort === "priority") return a.priority - b.priority;
     if (S.sort === "due") { if(!a.due&&!b.due)return 0; if(!a.due)return 1; if(!b.due)return -1; return new Date(a.due)-new Date(b.due); }
     return b.created - a.created;
@@ -756,6 +770,9 @@ function renderTodo(t) {
       </div>
       <div class="indicator-icons">${ind}</div>
       <div class="todo-actions">
+        <button class="act-btn" onclick="openPostponeModal(${t.id})" title="Postpone">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>
         <button class="act-btn" onclick="openEditTodo(${t.id})" title="Edit">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -1250,6 +1267,96 @@ function doImport() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// POSTPONED VIEW
+// ══════════════════════════════════════════════════════════════
+function renderPostponedView() {
+  const postponed = S.todos.filter(t => !t.archived && !t.completed && t.postponedUntil)
+    .sort((a,b) => new Date(a.postponedUntil) - new Date(b.postponedUntil));
+  if (!postponed.length) {
+    return `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Nothing postponed.<br>Click the clock icon on a task to postpone it.</p></div>`;
+  }
+  return postponed.map(t => {
+    const proj = S.projects.find(p => p.id === t.project);
+    const returned = isPostponeReturned(t);
+    const when = new Date(t.postponedUntil);
+    const whenStr = when.toLocaleString("no", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return `<div class="reminder-card${returned?" completed":""}">
+      <div class="reminder-bell">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="reminder-body">
+        <div class="reminder-title">${esc(t.title)}</div>
+        <div class="reminder-time">${returned ? "Tilbake nå — se varsel" : "Tilbake " + whenStr}</div>
+        ${proj?`<span class="tag" style="background:${proj.color}22;color:${proj.color};border:1px solid ${proj.color}33">${esc(proj.name)}</span>`:""}
+      </div>
+      <div class="reminder-actions">
+        <button class="act-btn" onclick="openPostponeModal(${t.id})" title="Edit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="act-btn danger" onclick="cancelPostpone(${t.id})" title="Cancel postpone">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function openPostponeModal(id) {
+  const t = S.todos.find(t=>t.id===id); if(!t) return;
+  const val = t.postponedUntil ? new Date(t.postponedUntil).toISOString().slice(0,16) : "";
+  openModal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Postpone Task</div>
+    <div class="form-group"><label class="form-label">${esc(t.title)}</label></div>
+    <div class="form-group"><label class="form-label">Return date &amp; time</label>
+      <input class="form-input" type="datetime-local" id="pp-date" value="${val}"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModalForce()">Cancel</button>
+      <button class="btn btn-filled" onclick="savePostpone(${id})">Save</button>
+    </div>
+  </div>`);
+}
+function savePostpone(id) {
+  const t = S.todos.find(t=>t.id===id); if(!t) return;
+  const val = document.getElementById("pp-date").value;
+  if (!val) { showToast("Choose a date", "", "alert"); return; }
+  t.postponedUntil = new Date(val).toISOString();
+  schedulePostpones(); closeModalForce(); render();
+  showToast("Postponed", t.title, "ok");
+}
+function cancelPostpone(id) {
+  const t = S.todos.find(t=>t.id===id); if(!t) return;
+  t.postponedUntil = null;
+  dismissAlert("postpone-alert-"+id);
+  render();
+}
+function acknowledgePostpone(id) {
+  const t = S.todos.find(t=>t.id===id); if(!t) return;
+  t.postponedUntil = null;
+  render();
+}
+
+const postponeTimers = {};
+function schedulePostpones() {
+  Object.values(postponeTimers).forEach(clearTimeout);
+  const now = Date.now();
+  S.todos.forEach(t => {
+    if (!t.postponedUntil || t.completed || t.archived) return;
+    const diff = new Date(t.postponedUntil).getTime() - now;
+    if (diff > 0 && diff < 7*24*3600000) {
+      postponeTimers[t.id] = setTimeout(() => showPostponeAlert(t), diff);
+    } else if (diff <= 0) {
+      showPostponeAlert(t);
+    }
+  });
+}
+function showPostponeAlert(t) {
+  const alertId = "postpone-alert-" + t.id;
+  if (document.getElementById(alertId)) return;
+  addNotifCard({ kind: "alert", id: alertId, label: "Tilbake", title: t.title, onDoneFn: `acknowledgePostpone(${t.id})` });
+  openNotifPile();
+}
+
+// ══════════════════════════════════════════════════════════════
 // REMINDERS VIEW
 // ══════════════════════════════════════════════════════════════
 function renderRemindersView() {
@@ -1429,7 +1536,7 @@ function updateRemindersBadge() {
 // ══════════════════════════════════════════════════════════════
 // NOTIFICATION PILE
 // ══════════════════════════════════════════════════════════════
-function addNotifCard({ kind, id, label, title, body, alertType, autoDismiss }) {
+function addNotifCard({ kind, id, label, title, body, alertType, autoDismiss, onDoneFn }) {
   const pile=document.getElementById("notif-pile"); if(!pile) return;
   const el=document.createElement("div");
   const cardId=id||("card-"+Date.now());
@@ -1441,7 +1548,7 @@ function addNotifCard({ kind, id, label, title, body, alertType, autoDismiss }) 
     if (autoDismiss) setTimeout(()=>{ el.animate([{opacity:1},{opacity:0}],{duration:300,fill:"forwards"}).onfinish=()=>{el.remove();updateBellBadge();}; }, autoDismiss);
   } else if (kind==="alert") {
     el.className="notif-card is-alert";
-    el.innerHTML=`<div class="nc-label">⏰ ${label||"Reminder"}</div><div class="nc-title">${title}</div><button class="nc-done-btn" onclick="dismissAlert('${cardId}')">Done</button>`;
+    el.innerHTML=`<div class="nc-label">⏰ ${label||"Reminder"}</div><div class="nc-title">${title}</div><button class="nc-done-btn" onclick="${onDoneFn?onDoneFn+';':''}dismissAlert('${cardId}')">Done</button>`;
     pile.prepend(el);
   }
   updateBellBadge();
@@ -1503,6 +1610,7 @@ async function boot() {
   document.getElementById("app-loading").style.display="none";
   document.getElementById("app-root").style.display="flex";
   scheduleReminders();
+  schedulePostpones();
   render();
 }
 boot();
