@@ -702,7 +702,12 @@ function renderArchive() {
 
 function renderTodoGroup(label, todos) {
   let h = `<div class="todo-group">`;
-  if (label) h += `<div class="group-header">${label}<div class="group-divider"></div></div>`;
+  if (label) {
+    const clearBtn = label === "Done"
+      ? `<button class="btn btn-sm btn-danger" onclick="clearCompleted([${todos.map(t=>t.id).join(",")}])">Slett alle fullførte</button>`
+      : "";
+    h += `<div class="group-header"><span>${label}</span><div class="group-divider"></div>${clearBtn}</div>`;
+  }
   todos.forEach(t => { h += renderTodo(t); });
   h += `</div>`;
   return h;
@@ -988,6 +993,13 @@ function toggleTodo(id) {
 function archiveTodo(id) { const t=S.todos.find(t=>t.id===id); if(!t) return; t.archived=true;t.completed=true;t.expanded=false; render(); showToast("Archived",t.title,"ok"); }
 function unarchive(id) { const t=S.todos.find(t=>t.id===id); if(!t) return; t.archived=false;t.completed=false; render(); showToast("Restored",t.title,"ok"); }
 function permanentDelete(id) { if(!confirm("Permanently delete? This cannot be undone.")) return; S.todos=S.todos.filter(t=>t.id!==id); render(); }
+function clearCompleted(ids) {
+  if (!ids.length) return;
+  if (!confirm(`Slette ${ids.length} fullført${ids.length!==1?"e":""} oppgave${ids.length!==1?"r":""}? Dette kan ikke angres.`)) return;
+  S.todos = S.todos.filter(t => !ids.includes(t.id));
+  render();
+  showToast("Slettet", `${ids.length} oppgave${ids.length!==1?"r":""} fjernet`, "ok");
+}
 function deleteTodoDirect(id) {
   const t=S.todos.find(t=>t.id===id); if(!t) return;
   if(!confirm(`Delete "${t.title}"? This cannot be undone.`)) return;
