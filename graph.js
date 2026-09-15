@@ -27,7 +27,10 @@ async function getGraphToken() {
       grant_type: "client_credentials",
     }),
   });
-  if (!res.ok) throw new Error(`Graph token request failed: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Graph token request failed: ${res.status} ${body}`);
+  }
   const data = await res.json();
   cachedToken = data.access_token;
   // Refresh a minute early so a request never races an expiring token.
