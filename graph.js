@@ -53,7 +53,13 @@ async function getGraphProfile(email) {
       `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(email)}?$select=jobTitle,department`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const data = res.ok ? await res.json() : null;
+    if (!res.ok) {
+      // Not cached: a permission/config fix should take effect on the next
+      // request, not be masked by an hour-old failed lookup.
+      console.error(`Graph profile request failed: ${res.status} ${await res.text()}`);
+      return null;
+    }
+    const data = await res.json();
     profileCache.set(email, { data, expiresAt: Date.now() + PROFILE_TTL_MS });
     return data;
   } catch (err) {
@@ -73,7 +79,11 @@ async function getGraphPhoto(email) {
     const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(email)}/photo/$value`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const buffer = res.ok ? Buffer.from(await res.arrayBuffer()) : null;
+    if (!res.ok) {
+      console.error(`Graph photo request failed: ${res.status} ${await res.text()}`);
+      return null;
+    }
+    const buffer = Buffer.from(await res.arrayBuffer());
     photoCache.set(email, { buffer, expiresAt: Date.now() + PROFILE_TTL_MS });
     return buffer;
   } catch (err) {
