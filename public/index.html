@@ -1151,6 +1151,7 @@ function openAddProject() {
 function openEditProject(id) {
   const p=S.projects.find(p=>p.id===id); if(!p) return;
   if(!p.members) p.members=[];
+  const link = p.shareToken ? `${location.origin}/join/${encodeURIComponent(p.id)}/${p.shareToken}` : "";
   openModal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">Edit Project</div>
     <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="ep-name" value="${esc(p.name)}"></div>
@@ -1161,16 +1162,21 @@ function openEditProject(id) {
       <input type="hidden" id="ep-color" value="${p.color}">
     </div>
     <div class="form-group">
-      <label class="form-label">Members <span class="form-hint">(invite colleagues — access sharing is coming next, this just builds the list)</span></label>
-      ${p.members.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        ${p.members.map(m=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-1);border:1px solid var(--card-border);color:var(--on-surface)">
-          ${esc(m.name||m.email)}
-          <button onclick="removeProjectMember('${jsStr(id)}','${jsStr(m.email)}')" style="background:none;border:none;cursor:pointer;color:var(--on-surface-2);padding:0;font-size:12px;line-height:1">×</button>
-        </span>`).join("")}
-      </div>` : ""}
-      <input class="form-input" id="ep-member-search" placeholder="Search by name or email…" oninput="searchProjectMembers('${jsStr(id)}', this.value)" autocomplete="off">
-      <div id="ep-member-results"></div>
+      <label class="form-label">Share <span class="form-hint">(anyone who opens the link and signs in joins — seeing/editing shared tasks is coming next)</span></label>
+      ${link ? `<div style="display:flex;gap:6px">
+        <input class="form-input" id="ep-share-link" value="${esc(link)}" readonly onclick="this.select()">
+        <button class="btn btn-sm" onclick="copyShareLink()">Copy</button>
+      </div>` : `<button class="btn btn-sm" onclick="generateShareLink('${jsStr(id)}')">Generate share link</button>`}
     </div>
+    ${p.members.length ? `<div class="form-group">
+      <label class="form-label">Members</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${p.members.map(m=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-1);border:1px solid var(--card-border);color:var(--on-surface)">
+          ${esc(m.name||m.email||"Unknown")}
+          <button onclick="removeProjectMember('${jsStr(id)}','${jsStr(m.oid)}')" style="background:none;border:none;cursor:pointer;color:var(--on-surface-2);padding:0;font-size:12px;line-height:1">×</button>
+        </span>`).join("")}
+      </div>
+    </div>` : ""}
     <div class="modal-footer">
       <button class="btn btn-danger" onclick="deleteProject('${id}')">Delete</button>
       <button class="btn" onclick="closeModalForce()">Cancel</button>
@@ -1179,33 +1185,20 @@ function openEditProject(id) {
   </div>`);
 }
 function jsStr(s) { return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
-let memberSearchTimer=null;
-function searchProjectMembers(id, q) {
-  clearTimeout(memberSearchTimer);
-  const box=document.getElementById("ep-member-results"); if(!box) return;
-  q=q.trim();
-  if(!q){ box.innerHTML=""; return; }
-  memberSearchTimer=setTimeout(async ()=>{
-    try {
-      const res=await fetch("/api/employees?q="+encodeURIComponent(q));
-      const results=await res.json();
-      box.style.cssText="position:absolute;z-index:9000;background:var(--modal-bg);border:1px solid var(--card-border);border-radius:8px;margin-top:4px;max-height:160px;overflow-y:auto;width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.18)";
-      box.innerHTML = results.length
-        ? results.map(r=>`<div class="custom-sel-opt" onclick="addProjectMember('${jsStr(id)}','${jsStr(r.email)}','${jsStr(r.name)}')">${esc(r.name)} <span style="color:var(--on-surface-2);font-size:10.5px">${esc(r.email)}</span></div>`).join("")
-        : `<div class="custom-sel-opt" style="cursor:default">No matches</div>`;
-    } catch(e) { box.innerHTML=""; }
-  }, 250);
-}
-function addProjectMember(id, email, name) {
+function generateShareLink(id) {
   const p=S.projects.find(p=>p.id===id); if(!p) return;
-  if(!p.members) p.members=[];
-  if(!p.members.find(m=>m.email===email)) p.members.push({ email, name, status:"pending" });
+  p.shareToken = (crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2))).replace(/-/g,"");
   render();
   openEditProject(id);
 }
-function removeProjectMember(id, email) {
+function copyShareLink() {
+  const inp=document.getElementById("ep-share-link"); if(!inp) return;
+  inp.select();
+  navigator.clipboard?.writeText(inp.value).then(()=>showToast("Link copied","","ok")).catch(()=>{});
+}
+function removeProjectMember(id, oid) {
   const p=S.projects.find(p=>p.id===id); if(!p) return;
-  p.members=(p.members||[]).filter(m=>m.email!==email);
+  p.members=(p.members||[]).filter(m=>m.oid!==oid);
   render();
   openEditProject(id);
 }
@@ -1679,6 +1672,12 @@ async function boot() {
   scheduleReminders();
   schedulePostpones();
   render();
+
+  const joined = new URLSearchParams(location.search).get("joined");
+  if (joined) {
+    showToast("You're on the list", `${joined} — the owner still needs to finish wiring up shared task access`, "ok");
+    history.replaceState(null, "", location.pathname);
+  }
 }
 boot();
 </script>

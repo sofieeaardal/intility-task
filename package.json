@@ -5,8 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "seed": "node seed.js",
-    "seed-employees": "node seed-employees.js"
+    "seed": "node seed.js"
   },
   "dependencies": {
     "express": "^4.19.2",

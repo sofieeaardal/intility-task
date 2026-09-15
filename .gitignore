@@ -1,6 +1,5 @@
 node_modules/
 server.log
 seed-data.json
-employees-data.json
 AA-activeUsers-*.xlsx
 .env

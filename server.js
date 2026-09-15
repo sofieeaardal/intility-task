@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { initDb, getState, setState, EMPTY_STATE, searchEmployees } = require("./db");
+const { initDb, getState, setState, EMPTY_STATE } = require("./db");
 
 const app = express();
 
@@ -25,6 +25,7 @@ function identify(req, res, next) {
       JSON.stringify({ oid: req.headers["x-auth-oid"], subject: req.headers["x-auth-subject"], email: req.headers["x-auth-user"] })
     );
   }
+  req.uid = uid;
   req.isOwner = !!owner && uid === owner;
   next();
 }
@@ -32,7 +33,6 @@ app.use(identify);
 
 // Generous limit: state includes base64-encoded file attachments.
 app.use(express.json({ limit: "50mb" }));
-app.use(express.static(path.join(__dirname, "public")));
 
 // Shown only for the owner. Minato's SSO contract gives every app a
 // visitor's name and email, but not role/department/photo for anyone
@@ -65,21 +65,6 @@ app.get("/api/state", async (req, res) => {
   }
 });
 
-// Powers the project "invite" picker. Owner-only for now, same as everything
-// else — sharing/membership management isn't built yet, this just lets the
-// picker search the company directory ahead of that.
-app.get("/api/employees", async (req, res) => {
-  if (!req.isOwner) return res.json([]);
-  const q = String(req.query.q || "").trim();
-  if (!q) return res.json([]);
-  try {
-    res.json(await searchEmployees(q));
-  } catch (err) {
-    console.error("GET /api/employees failed:", err);
-    res.status(500).json({ error: "Search failed" });
-  }
-});
-
 app.put("/api/state", async (req, res) => {
   if (!req.isOwner) return res.json({ ok: true }); // silently no-op for everyone else
   try {
@@ -93,6 +78,36 @@ app.put("/api/state", async (req, res) => {
     res.status(500).json({ error: "Failed to save state" });
   }
 });
+
+// Anyone signed in (any Intility employee) can follow a project's share link
+// to be recorded as a member. This only records membership today — the
+// owner's data model still needs to become project-aware before a member
+// can actually see or edit the shared project's tasks. That's the next step.
+app.get("/join/:projectId/:token", async (req, res) => {
+  try {
+    const state = await getState();
+    const project = state.projects.find(p => p.id === req.params.projectId);
+    if (!project || !project.shareToken || project.shareToken !== req.params.token) {
+      return res.status(404).send("This invite link is invalid or has expired.");
+    }
+    if (!project.members) project.members = [];
+    if (!project.members.find(m => m.oid === req.uid)) {
+      project.members.push({
+        oid: req.uid,
+        email: req.headers["x-auth-user"] || "",
+        name: req.headers["x-auth-name"] || "",
+        joinedAt: Date.now(),
+      });
+      await setState(state);
+    }
+    res.redirect("/?joined=" + encodeURIComponent(project.name));
+  } catch (err) {
+    console.error("Join failed:", err);
+    res.status(500).send("Something went wrong joining this project.");
+  }
+});
+
+app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 
