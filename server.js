@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { initDb, getState, setState, EMPTY_STATE } = require("./db");
+const { initDb, getState, setState, EMPTY_STATE, searchEmployees } = require("./db");
 
 const app = express();
 
@@ -62,6 +62,21 @@ app.get("/api/state", async (req, res) => {
   } catch (err) {
     console.error("GET /api/state failed:", err);
     res.status(500).json({ error: "Failed to load state" });
+  }
+});
+
+// Powers the project "invite" picker. Owner-only for now, same as everything
+// else — sharing/membership management isn't built yet, this just lets the
+// picker search the company directory ahead of that.
+app.get("/api/employees", async (req, res) => {
+  if (!req.isOwner) return res.json([]);
+  const q = String(req.query.q || "").trim();
+  if (!q) return res.json([]);
+  try {
+    res.json(await searchEmployees(q));
+  } catch (err) {
+    console.error("GET /api/employees failed:", err);
+    res.status(500).json({ error: "Search failed" });
   }
 });
 

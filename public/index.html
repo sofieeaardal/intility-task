@@ -195,6 +195,7 @@ html:not(.bf-darkmode) .btn-filled { color:#fff; }
 .todo-item.dragging { opacity:.2; box-shadow:0 16px 40px rgba(0,0,0,0.5); transform:scale(1.01); }
 .todo-item.drag-over-top { border-top:2px solid var(--bfc-theme); box-shadow:0 -2px 12px rgba(13,242,215,0.2); }
 .todo-item.drag-over-bottom { border-bottom:2px solid var(--bfc-theme); box-shadow:0 2px 12px rgba(13,242,215,0.2); }
+.todo-item.just-back { border-color:var(--bfc-theme); box-shadow:0 0 0 1px var(--bfc-theme), 0 0 16px rgba(13,242,215,0.18); }
 
 .todo-main { display:flex; align-items:center; gap:9px; padding:10px 13px 10px 14px; }
 .drag-handle { color:var(--on-surface-dim); cursor:grab; flex-shrink:0; display:flex; align-items:center; padding:0 2px; transition:color .12s; }
@@ -510,13 +511,21 @@ let S = { todos: [], projects: [], pinnedNotes: [], view: "all", sort: "priority
 let saveTimer = null;
 function saveState() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    fetch("/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(S),
-    }).catch(() => showToast("Save failed", "Check your connection", "alert"));
-  }, 400);
+  saveTimer = setTimeout(() => attemptSave(0), 400);
+}
+function attemptSave(retryCount) {
+  // Sends the live S each attempt (not a snapshot) so a retry after a transient
+  // blip (e.g. the workspace briefly waking up) never overwrites newer edits.
+  fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(S),
+  }).then(res => {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+  }).catch(() => {
+    if (retryCount < 2) setTimeout(() => attemptSave(retryCount + 1), 800 * (retryCount + 1));
+    else showToast("Save failed", "Reload the page if this keeps happening", "alert");
+  });
 }
 
 async function loadState() {
@@ -601,7 +610,7 @@ function renderSidebar() {
 
   document.getElementById("proj-nav").innerHTML = S.projects.map(p => {
     const cnt = S.todos.filter(t => t.project === p.id && !t.completed && !t.archived).length;
-    return `<button class="nav-item${S.view === p.id ? " active" : ""}" id="proj-nav-${esc(p.id)}"
+    return `<div class="nav-item${S.view === p.id ? " active" : ""}" id="proj-nav-${esc(p.id)}" style="cursor:pointer"
       draggable="true"
       ondragstart="onProjDragStart(event,'${esc(p.id)}')"
       ondragover="onProjDragOver(event,'${esc(p.id)}')"
@@ -610,8 +619,12 @@ function renderSidebar() {
       ondragend="onProjDragEnd()"
       onclick="setView('${esc(p.id)}')">
       <span class="proj-dot" style="background:${p.color};color:${p.color}"></span>
-      ${esc(p.name)}<span class="nav-badge">${cnt}</span>
-    </button>`;
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
+      <span class="nav-badge">${cnt}</span>
+      <button class="act-btn" style="padding:2px 3px" onclick="event.stopPropagation();openEditProject('${esc(p.id)}')" title="Edit project">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>`;
   }).join("");
 }
 
@@ -637,6 +650,10 @@ function renderMain() {
 
 function isPostponeWaiting(t) { return !!t.postponedUntil && new Date(t.postponedUntil) > new Date(); }
 function isPostponeReturned(t) { return !!t.postponedUntil && new Date(t.postponedUntil) <= new Date(); }
+// Keeps the "just back" highlight visible for a few days after the postpone
+// alert is dismissed, not just while it's technically still "returned".
+function isRecentlyReturned(t) { return !!t.justReturnedAt && (Date.now() - t.justReturnedAt) < 3*24*3600000; }
+function justBackFromPostpone(t) { return isPostponeReturned(t) || isRecentlyReturned(t); }
 
 function getTodos(projectFilter) {
   let todos = S.todos.filter(t => !t.archived && !t.completed && !isPostponeWaiting(t));
@@ -743,7 +760,9 @@ function renderTodo(t) {
   if(hasFile)ind+=`<span class="ind-icon" title="${t.files.length} file(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></span>`;
   if(hasRem)ind+=`<span class="ind-icon" title="Reminder set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>`;
 
-  return `<div class="todo-item priority-${t.priority}${t.completed?" completed":""}" id="todo-${t.id}"
+  const justBack = justBackFromPostpone(t);
+
+  return `<div class="todo-item priority-${t.priority}${t.completed?" completed":""}${justBack?" just-back":""}" id="todo-${t.id}"
     draggable="true"
     ondragstart="onDragStart(event,${t.id})"
     ondragover="onDragOver(event,${t.id})"
@@ -760,6 +779,7 @@ function renderTodo(t) {
       <div class="todo-content" onclick="toggleExpand(${t.id})">
         <div class="todo-title">${esc(t.title)}</div>
         <div class="todo-meta-row">
+          ${justBack?`<span class="tag" style="background:var(--bfc-brand-fade);color:var(--bfc-theme);border:1px solid var(--bfc-theme)">↩ Tilbake</span>`:""}
           ${proj?`<span class="tag" style="background:${proj.color}22;color:${proj.color};border:1px solid ${proj.color}33">${esc(proj.name)}</span>`:""}
           <span class="tag tag-p${t.priority}">${PRIORITY_LABELS[t.priority]}</span>
           ${subTotal>0?`<span class="due-hint">${subDone}/${subTotal}</span>`:""}
@@ -1130,6 +1150,7 @@ function openAddProject() {
 }
 function openEditProject(id) {
   const p=S.projects.find(p=>p.id===id); if(!p) return;
+  if(!p.members) p.members=[];
   openModal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">Edit Project</div>
     <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="ep-name" value="${esc(p.name)}"></div>
@@ -1139,12 +1160,54 @@ function openEditProject(id) {
       </div>
       <input type="hidden" id="ep-color" value="${p.color}">
     </div>
+    <div class="form-group">
+      <label class="form-label">Members <span class="form-hint">(invite colleagues — access sharing is coming next, this just builds the list)</span></label>
+      ${p.members.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        ${p.members.map(m=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-1);border:1px solid var(--card-border);color:var(--on-surface)">
+          ${esc(m.name||m.email)}
+          <button onclick="removeProjectMember('${jsStr(id)}','${jsStr(m.email)}')" style="background:none;border:none;cursor:pointer;color:var(--on-surface-2);padding:0;font-size:12px;line-height:1">×</button>
+        </span>`).join("")}
+      </div>` : ""}
+      <input class="form-input" id="ep-member-search" placeholder="Search by name or email…" oninput="searchProjectMembers('${jsStr(id)}', this.value)" autocomplete="off">
+      <div id="ep-member-results"></div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-danger" onclick="deleteProject('${id}')">Delete</button>
       <button class="btn" onclick="closeModalForce()">Cancel</button>
       <button class="btn btn-filled" onclick="saveEditProject('${id}')">Save</button>
     </div>
   </div>`);
+}
+function jsStr(s) { return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
+let memberSearchTimer=null;
+function searchProjectMembers(id, q) {
+  clearTimeout(memberSearchTimer);
+  const box=document.getElementById("ep-member-results"); if(!box) return;
+  q=q.trim();
+  if(!q){ box.innerHTML=""; return; }
+  memberSearchTimer=setTimeout(async ()=>{
+    try {
+      const res=await fetch("/api/employees?q="+encodeURIComponent(q));
+      const results=await res.json();
+      box.style.cssText="position:absolute;z-index:9000;background:var(--modal-bg);border:1px solid var(--card-border);border-radius:8px;margin-top:4px;max-height:160px;overflow-y:auto;width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.18)";
+      box.innerHTML = results.length
+        ? results.map(r=>`<div class="custom-sel-opt" onclick="addProjectMember('${jsStr(id)}','${jsStr(r.email)}','${jsStr(r.name)}')">${esc(r.name)} <span style="color:var(--on-surface-2);font-size:10.5px">${esc(r.email)}</span></div>`).join("")
+        : `<div class="custom-sel-opt" style="cursor:default">No matches</div>`;
+    } catch(e) { box.innerHTML=""; }
+  }, 250);
+}
+function addProjectMember(id, email, name) {
+  const p=S.projects.find(p=>p.id===id); if(!p) return;
+  if(!p.members) p.members=[];
+  if(!p.members.find(m=>m.email===email)) p.members.push({ email, name, status:"pending" });
+  render();
+  openEditProject(id);
+}
+function removeProjectMember(id, email) {
+  const p=S.projects.find(p=>p.id===id); if(!p) return;
+  p.members=(p.members||[]).filter(m=>m.email!==email);
+  render();
+  openEditProject(id);
 }
 function pickColor(el) {
   document.querySelectorAll("#color-sw-wrap .color-sw").forEach(e=>e.classList.remove("sel"));
@@ -1290,8 +1353,11 @@ function renderPostponedView() {
         ${proj?`<span class="tag" style="background:${proj.color}22;color:${proj.color};border:1px solid ${proj.color}33">${esc(proj.name)}</span>`:""}
       </div>
       <div class="reminder-actions">
-        <button class="act-btn" onclick="openPostponeModal(${t.id})" title="Edit">
+        <button class="act-btn" onclick="openEditTodo(${t.id})" title="Edit task">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="act-btn" onclick="openPostponeModal(${t.id})" title="Change return date">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </button>
         <button class="act-btn danger" onclick="cancelPostpone(${t.id})" title="Cancel postpone">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1332,6 +1398,7 @@ function cancelPostpone(id) {
 function acknowledgePostpone(id) {
   const t = S.todos.find(t=>t.id===id); if(!t) return;
   t.postponedUntil = null;
+  t.justReturnedAt = Date.now();
   render();
 }
 
