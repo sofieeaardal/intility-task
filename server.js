@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { initDb, getState, setState, EMPTY_STATE } = require("./db");
+const { getGraphProfile, getGraphPhoto } = require("./graph");
 
 const app = express();
 
@@ -34,25 +35,34 @@ app.use(identify);
 // Generous limit: state includes base64-encoded file attachments.
 app.use(express.json({ limit: "50mb" }));
 
-// Shown only for the owner. Minato's SSO contract gives every app a
-// visitor's name and email, but not role/department/photo for anyone
-// (see minato://docs/reference/end-user-identity) — those aren't available
-// to fetch per-user, so they're hardcoded for the one person they're true for.
-const OWNER_SUBTITLE = "Management Graduate • Cloud Infrastructure • Intility AS";
-
-app.get("/api/whoami", (req, res) => {
+// Minato's SSO contract gives every app a visitor's name and email, but not
+// role/department/photo (see minato://docs/reference/end-user-identity) — so
+// those come from Microsoft Graph instead, looked up by the visitor's own
+// email, for every visitor, not just the owner.
+app.get("/api/whoami", async (req, res) => {
   const fullName = req.headers["x-auth-name"] || "there";
   const firstName = fullName.split(" ")[0];
-  res.json({
-    firstName,
-    subtitle: req.isOwner ? OWNER_SUBTITLE : null,
-    hasAvatar: req.isOwner,
-  });
+  const email = req.headers["x-auth-user"];
+
+  let subtitle = null;
+  let hasAvatar = false;
+  if (email) {
+    const profile = await getGraphProfile(email);
+    if (profile && (profile.jobTitle || profile.department)) {
+      subtitle = [profile.jobTitle, profile.department, "Intility AS"].filter(Boolean).join(" • ");
+    }
+    hasAvatar = !!(await getGraphPhoto(email));
+  }
+  res.json({ firstName, subtitle, hasAvatar });
 });
 
-app.get("/api/avatar", (req, res) => {
-  if (!req.isOwner) return res.sendStatus(404);
-  res.sendFile(path.join(__dirname, "private", "avatar.jpg"));
+app.get("/api/avatar", async (req, res) => {
+  const email = req.headers["x-auth-user"];
+  if (!email) return res.sendStatus(404);
+  const photo = await getGraphPhoto(email);
+  if (!photo) return res.sendStatus(404);
+  res.set("Content-Type", "image/jpeg");
+  res.send(photo);
 });
 
 app.get("/api/state", async (req, res) => {
