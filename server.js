@@ -1,7 +1,8 @@
 const express = require("express");
 const path = require("path");
 const { initDb, getState, setState, EMPTY_STATE } = require("./db");
-const { getGraphProfile, getGraphPhoto } = require("./graph");
+const { getGraphPhoto } = require("./graph");
+const { getAuthorizeUrl, handleCallback, isConnected } = require("./msftAuth");
 
 const app = express();
 
@@ -36,24 +37,23 @@ app.use(identify);
 app.use(express.json({ limit: "50mb" }));
 
 // Minato's SSO contract gives every app a visitor's name and email, but not
-// role/department/photo (see minato://docs/reference/end-user-identity) — so
-// those come from Microsoft Graph instead, looked up by the visitor's own
-// email, for every visitor, not just the owner.
+// a photo (see minato://docs/reference/end-user-identity) — that comes from
+// Microsoft Graph instead, using the owner's own delegated grant (see
+// msftAuth.js), looked up by the visitor's own email.
 app.get("/api/whoami", async (req, res) => {
   const fullName = req.headers["x-auth-name"] || "there";
   const firstName = fullName.split(" ")[0];
   const email = req.headers["x-auth-user"];
 
-  let subtitle = null;
-  let hasAvatar = false;
-  if (email) {
-    const profile = await getGraphProfile(email);
-    if (profile && (profile.jobTitle || profile.department)) {
-      subtitle = [profile.jobTitle, profile.department, "Intility AS"].filter(Boolean).join(" • ");
-    }
-    hasAvatar = !!(await getGraphPhoto(email));
-  }
-  res.json({ firstName, subtitle, hasAvatar });
+  const hasAvatar = email ? !!(await getGraphPhoto(email)) : false;
+  res.json({
+    firstName,
+    subtitle: null,
+    hasAvatar,
+    // Only the owner can see/use the "connect Microsoft" action.
+    canConnectGraph: req.isOwner,
+    graphConnected: req.isOwner ? await isConnected() : false,
+  });
 });
 
 app.get("/api/avatar", async (req, res) => {
@@ -63,6 +63,22 @@ app.get("/api/avatar", async (req, res) => {
   if (!photo) return res.sendStatus(404);
   res.set("Content-Type", "image/jpeg");
   res.send(photo);
+});
+
+app.get("/auth/login", (req, res) => {
+  if (!req.isOwner) return res.sendStatus(403);
+  res.redirect(getAuthorizeUrl());
+});
+
+app.get("/auth/callback", async (req, res) => {
+  if (!req.isOwner) return res.sendStatus(403);
+  try {
+    await handleCallback(req.query.code, req.query.state);
+    res.redirect("/?graphConnected=1");
+  } catch (err) {
+    console.error("Microsoft auth callback failed:", err.message);
+    res.status(500).send("Could not complete sign-in with Microsoft. Please try again.");
+  }
 });
 
 app.get("/api/state", async (req, res) => {
