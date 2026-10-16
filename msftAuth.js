@@ -6,8 +6,8 @@
 const crypto = require("crypto");
 const { getGraphAuth, setGraphAuth } = require("./db");
 
-const SCOPE = "openid profile offline_access User.ReadBasic.All";
-const REDIRECT_URI = "https://intility-task.intility.minato.intilitest.no/auth/callback";
+const SCOPE = "openid profile offline_access User.ReadBasic.All Calendars.Read";
+const REDIRECT_URI = process.env.REDIRECT_URI || "https://intility-task.intility.minato.intilitest.no/auth/callback";
 
 // Short-lived CSRF state store: login redirects and callbacks happen within
 // the same browser session seconds apart, so an in-memory Map is enough.
@@ -23,13 +23,13 @@ function consumeState(state) {
   return !!expiresAt && Date.now() < expiresAt;
 }
 
-function getAuthorizeUrl() {
+function getAuthorizeUrl(redirectUri) {
   const tenantId = process.env.AZURE_TENANT_ID;
   const clientId = process.env.AZURE_CLIENT_ID;
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: "code",
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: redirectUri || REDIRECT_URI,
     response_mode: "query",
     scope: SCOPE,
     state: createState(),
@@ -37,12 +37,13 @@ function getAuthorizeUrl() {
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?${params}`;
 }
 
-async function handleCallback(code, state) {
+async function handleCallback(code, state, redirectUri) {
   if (!consumeState(state)) throw new Error("Invalid or expired state");
 
   const tenantId = process.env.AZURE_TENANT_ID;
   const clientId = process.env.AZURE_CLIENT_ID;
   const clientSecret = process.env.AZURE_CLIENT_SECRET;
+  const uri = redirectUri || REDIRECT_URI;
 
   const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
     method: "POST",
@@ -52,7 +53,7 @@ async function handleCallback(code, state) {
       client_secret: clientSecret,
       grant_type: "authorization_code",
       code,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: uri,
       scope: SCOPE,
     }),
   });

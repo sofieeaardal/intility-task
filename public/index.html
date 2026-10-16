@@ -377,6 +377,79 @@ html:not(.bf-darkmode) .btn-filled { color:#fff; }
 .notif-card { animation:ncIn .22s cubic-bezier(.2,.8,.3,1); }
 
 .app-loading { display:flex; align-items:center; justify-content:center; height:100vh; width:100%; color:var(--on-surface-2); font-size:13px; }
+
+/* Week plan / calendar */
+.cal-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.cal-range { font-family:'Satoshi','Open Sans',sans-serif; font-size:14px; font-weight:700; color:var(--on-surface); margin-left:6px; letter-spacing:-.1px; }
+.cal-week-badge { font-size:11px; font-weight:700; color:var(--bfc-theme); background:var(--bfc-brand-fade); border:1px solid var(--bfc-theme); border-radius:20px; padding:2px 10px; }
+.cal-inbox { background:var(--card-bg); border:1px dashed var(--card-border); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+.cal-inbox-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--on-surface-2); margin-bottom:9px; display:flex; align-items:center; gap:6px; }
+.cal-inbox-chips { display:flex; flex-wrap:wrap; gap:6px; min-height:34px; }
+.cal-inbox-hint { font-size:11.5px; color:var(--on-surface-2); padding:6px 2px; }
+.cal-scroll { overflow-x:auto; }
+.cal-grid { display:grid; gap:8px; align-items:start; min-width:900px; }
+.cal-day { background:var(--card-bg); border:1px solid var(--card-border); border-radius:11px; padding:8px; transition:border-color .15s,box-shadow .15s; display:flex; flex-direction:column; }
+.cal-day.cal-today { border-color:var(--bfc-theme); box-shadow:0 0 0 1px var(--bfc-theme), 0 0 16px rgba(13,242,215,0.15); }
+.cal-day.cal-drop-hover { border-color:var(--bfc-theme); background:var(--bfc-brand-fade); }
+.cal-day-head { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; padding:0 2px 6px; border-bottom:1px solid var(--divider); flex-shrink:0; }
+.cal-day-name { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--on-surface-2); }
+.cal-today .cal-day-name { color:var(--bfc-theme); }
+.cal-day-num { font-size:11.5px; font-weight:700; color:var(--on-surface); }
+.cal-day-count { font-size:9.5px; color:var(--on-surface-2); font-weight:600; }
+.cal-day-body { position:relative; }
+.cal-allday { border:1px dashed var(--card-border); border-radius:8px; padding:5px 6px; margin-bottom:7px; transition:border-color .15s,background .15s; }
+.cal-allday.cal-drop-hover { border-color:var(--bfc-theme); background:var(--bfc-brand-fade); }
+.cal-allday-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--on-surface-dim); margin-bottom:4px; }
+.cal-hourline { position:absolute; left:0; right:0; height:1px; background:var(--divider); opacity:.45; pointer-events:none; }
+.cal-hourline span { position:absolute; left:2px; top:-6px; font-size:8.5px; font-weight:600; color:var(--on-surface-dim); background:var(--card-bg); padding:0 3px; border-radius:3px; }
+.cal-day-body.cal-drop-hover { background:var(--bfc-brand-fade); border-radius:8px; }
+.cal-ev { position:absolute; left:26px; right:5px; border-radius:7px; background:var(--surface-1); border:1px solid var(--card-border); overflow:hidden; user-select:none; touch-action:none; cursor:grab; display:flex; align-items:flex-start; gap:5px; padding:3px 5px 3px 8px; transition:border-color .12s; }
+.cal-ev::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+.cal-ev.priority-1::before { background:var(--p1); }
+.cal-ev.priority-2::before { background:var(--p2); }
+.cal-ev.priority-3::before { background:var(--p3); }
+.cal-ev.priority-4::before { background:var(--on-surface-dim); }
+.cal-ev:hover { border-color:var(--bfc-theme); }
+.cal-ev.done { opacity:.4; }
+.cal-ev-live { z-index:60; opacity:.92; box-shadow:0 12px 32px rgba(0,0,0,.35); border-color:var(--bfc-theme); cursor:grabbing; }
+.cal-ev-body { flex:1; min-width:0; overflow:hidden; cursor:pointer; }
+.cal-ev-time { font-size:9px; font-weight:700; color:var(--bfc-theme); letter-spacing:.3px; white-space:nowrap; }
+.cal-ev .todo-check { width:12px; height:12px; margin-top:1px; flex-shrink:0; border-radius:3px; }
+.cal-ev .todo-check svg { width:7px; height:7px; }
+.cal-ev .cal-unplan { top:2px; right:3px; }
+.cal-ev-resize { position:absolute; left:0; right:0; bottom:0; height:10px; cursor:ns-resize; display:flex; align-items:flex-end; justify-content:center; padding-bottom:2px; }
+.cal-ev-resize::after { content:''; width:26px; height:3px; border-radius:2px; background:currentColor; opacity:.35; }
+.cal-ev .cal-meet-title { font-size:10.5px; }
+.cal-card { position:relative; display:flex; align-items:flex-start; gap:6px; background:var(--surface-1); border:1px solid var(--card-border); border-radius:7px; padding:5px 18px 5px 9px; margin-bottom:4px; cursor:grab; transition:border-color .15s,background .15s; overflow:hidden; }
+.cal-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+.cal-card.priority-1::before { background:var(--p1); }
+.cal-card.priority-2::before { background:var(--p2); }
+.cal-card.priority-3::before { background:var(--p3); }
+.cal-card.priority-4::before { background:var(--on-surface-dim); }
+.cal-card:hover { border-color:var(--bfc-theme); background:var(--card-hover); }
+.cal-card.done { opacity:.4; }
+.cal-card.dragging { opacity:.25; }
+.cal-card-title { font-size:11px; font-weight:500; color:var(--on-surface); line-height:1.35; word-break:break-word; }
+.cal-card.done .cal-card-title { text-decoration:line-through; }
+.cal-card-body { flex:1; min-width:0; cursor:pointer; }
+.cal-card .todo-check { width:13px; height:13px; margin-top:1px; flex-shrink:0; border-radius:3px; }
+.cal-card .todo-check svg { width:7px; height:7px; }
+.cal-unplan { position:absolute; top:3px; right:4px; background:none; border:none; cursor:pointer; color:var(--on-surface-dim); font-size:14px; line-height:1; padding:0 3px; opacity:0; transition:opacity .12s,color .12s; }
+.cal-card:hover .cal-unplan { opacity:.8; }
+.cal-unplan:hover { color:var(--err); opacity:1 !important; }
+.cal-day-empty { font-size:10.5px; color:var(--on-surface-2); opacity:.6; padding:4px 2px; }
+.cal-add-btn { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--on-surface-2); display:flex; align-items:center; padding:2px 4px; border-radius:5px; transition:background .12s,color .12s; }
+.cal-add-btn:hover { background:var(--surface-hover); color:var(--bfc-theme); }
+.cal-wk-col { display:flex; align-items:stretch; }
+.cal-wk-toggle { width:34px; border:1px dashed var(--card-border); border-radius:9px; background:var(--card-bg); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--on-surface-2); font-size:10px; font-weight:700; writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:.5px; padding:10px 0; transition:border-color .15s,color .15s; }
+.cal-wk-toggle:hover { border-color:var(--bfc-theme); color:var(--bfc-theme); }
+.cal-wk-toggle svg { writing-mode:horizontal-tb; width:13px; height:13px; }
+.cal-meet { background:rgba(99,28,206,0.10); border:1px solid rgba(99,28,206,0.35); border-left:3px solid #8b5cf6; border-radius:7px; padding:5px 9px; margin-bottom:4px; cursor:default; overflow:hidden; }
+.cal-meet.busy { background:rgba(99,28,206,0.16); }
+.cal-meet-time { font-size:9.5px; font-weight:700; color:#a78bfa; letter-spacing:.3px; }
+.cal-meet-title { font-size:11px; font-weight:500; color:var(--on-surface); line-height:1.35; word-break:break-word; margin-top:1px; opacity:.85; }
+.cal-connect-hint { display:flex; align-items:center; gap:10px; background:var(--card-bg); border:1px dashed #8b5cf6; border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:12.5px; color:var(--on-surface-2); flex-wrap:wrap; }
+.cal-connect-hint a { color:#a78bfa; font-weight:700; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -413,7 +486,7 @@ html:not(.bf-darkmode) .btn-filled { color:#fff; }
         <div class="greeting-subtitle" id="greeting-subtitle" style="display:none"></div>
       </div>
     </div>
-    <a href="/auth/login" id="graph-connect-link" style="display:none;margin:6px 12px 0;font-size:10.5px;color:var(--bfc-theme);text-decoration:none;padding:6px 10px;border:1px dashed var(--bfc-theme);border-radius:8px;text-align:center">
+    <a href="javascript:void(0)" id="graph-connect-link" onclick="window.open(PROXY_BASE+'/auth/login','_blank')" style="display:none;margin:6px 12px 0;font-size:10.5px;color:var(--bfc-theme);text-decoration:none;padding:6px 10px;border:1px dashed var(--bfc-theme);border-radius:8px;text-align:center">
       Connect Microsoft profile photo
     </a>
 
@@ -428,6 +501,10 @@ html:not(.bf-darkmode) .btn-filled { color:#fff; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         Daily Focus
         <span class="nav-badge" id="badge-today">0</span>
+      </button>
+      <button class="nav-item" id="nav-calendar" onclick="setView('calendar')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Week Plan
       </button>
       <button class="nav-item" id="nav-projects" onclick="setView('projects')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
@@ -530,6 +607,23 @@ function attemptSave(retryCount) {
     else showToast("Save failed", "Reload the page if this keeps happening", "alert");
   });
 }
+function flushSave() {
+  clearTimeout(saveTimer);
+  attemptSave(0);
+}
+// Flush any pending save when the tab is hidden (refresh, tab switch, workspace
+// pause) so state changes like completing a todo are never lost mid-debounce.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    clearTimeout(saveTimer);
+    fetch("/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(S),
+      keepalive: true,
+    }).catch(() => {});
+  }
+});
 
 async function loadState() {
   const res = await fetch("/api/state");
@@ -604,7 +698,7 @@ function renderSidebar() {
   document.getElementById("badge-archive").textContent = S.todos.filter(t => t.archived).length;
   const postponedCount = S.todos.filter(t => t.postponedUntil && !t.completed && !t.archived).length;
   document.getElementById("badge-postponed").textContent = postponedCount > 0 ? postponedCount : "";
-  ["all","today","projects","archive"].forEach(v => {
+  ["all","today","calendar","projects","archive"].forEach(v => {
     const el = document.getElementById("nav-" + v);
     if (el) el.className = "nav-item" + (S.view === v ? " active" : "");
   });
@@ -632,11 +726,11 @@ function renderSidebar() {
 }
 
 function renderMain() {
-  const TITLES = { all: "All Tasks", today: "Daily Focus", projects: "Projects", archive: "Archive", reminders: "Reminders", postponed: "Postponed" };
+  const TITLES = { all: "All Tasks", today: "Daily Focus", calendar: "Week Plan", projects: "Projects", archive: "Archive", reminders: "Reminders", postponed: "Postponed" };
   const proj = S.projects.find(p => p.id === S.view);
   document.getElementById("view-title").textContent = TITLES[S.view] || (proj ? proj.name : S.view);
   const tr = document.getElementById("topbar-right");
-  if (S.view !== "projects" && S.view !== "archive" && S.view !== "reminders" && S.view !== "postponed") {
+  if (S.view !== "projects" && S.view !== "archive" && S.view !== "reminders" && S.view !== "postponed" && S.view !== "calendar") {
     tr.innerHTML = `<div class="sort-toggle">
       ${["priority","due","created"].map(s =>
         `<button class="sort-btn${S.sort===s?" active":""}" onclick="setSort('${s}')">${s==="priority"?"Priority":s==="due"?"Due date":"Created"}</button>`
@@ -645,6 +739,7 @@ function renderMain() {
   } else tr.innerHTML = "";
   const mc = document.getElementById("main-content");
   if (S.view === "archive")   { mc.innerHTML = renderArchive(); return; }
+  if (S.view === "calendar")  { mc.innerHTML = renderCalendarView(); return; }
   if (S.view === "projects")  { mc.innerHTML = renderProjectsView(); return; }
   if (S.view === "reminders") { mc.innerHTML = renderRemindersView(); return; }
   if (S.view === "postponed") { mc.innerHTML = renderPostponedView(); return; }
@@ -787,6 +882,7 @@ function renderTodo(t) {
           <span class="tag tag-p${t.priority}">${PRIORITY_LABELS[t.priority]}</span>
           ${subTotal>0?`<span class="due-hint">${subDone}/${subTotal}</span>`:""}
           ${dueHtml}
+          ${t.planned?`<span class="due-hint" style="color:var(--bfc-theme)">📅 ${formatPlanned(t.planned)}${t.plannedTime?" "+t.plannedTime:""}</span>`:""}
           ${t.daily?`<span class="due-hint" style="color:rgba(13,242,215,0.4)">daily</span>`:""}
         </div>
         ${subTotal>0?`<div class="sub-progress-pct">${Math.round(subDone/subTotal*100)}%</div>`:""}
@@ -1027,8 +1123,10 @@ function addTodo(sfx) {
 function toggleTodo(id) {
   const t=S.todos.find(t=>t.id===id); if(!t) return;
   t.completed=!t.completed;
-  if(t.completed){ t.expanded=false; showToast("✅ Done!",t.title,"ok"); celebrateTodo(document.getElementById("todo-"+id)); }
+  if(t.completed){ t.completedAt=Date.now(); t.expanded=false; showToast("✅ Done!",t.title,"ok"); celebrateTodo(document.getElementById("todo-"+id)); }
+  else { t.completedAt=null; }
   render();
+  flushSave();
 }
 function archiveTodo(id) { const t=S.todos.find(t=>t.id===id); if(!t) return; t.archived=true;t.completed=true;t.expanded=false; render(); showToast("Archived",t.title,"ok"); }
 function unarchive(id) { const t=S.todos.find(t=>t.id===id); if(!t) return; t.archived=false;t.completed=false; render(); showToast("Restored",t.title,"ok"); }
@@ -1112,6 +1210,8 @@ function openEditTodo(id) {
         <option value="false"${!t.daily?" selected":""}>No</option>
         <option value="true"${t.daily?" selected":""}>Yes</option>
       </select></div>
+    <div class="form-group"><label class="form-label">Planlagt dag <span class="form-hint">(ukeplanen)</span></label>
+      <input class="form-input" type="date" id="et-planned" value="${t.planned||""}"></div>
     <div class="form-group"><label class="form-label">Due date <span class="form-hint">(optional — for reference)</span></label>
       <input class="form-input" type="datetime-local" id="et-due" value="${dueVal}"></div>
     <div class="form-group"><label class="form-label">Reminder <span class="form-hint">(optional — triggers a notification)</span></label>
@@ -1129,6 +1229,7 @@ function saveEditTodo(id) {
   t.project=document.getElementById("et-proj").value;
   t.daily=document.getElementById("et-daily").value==="true";
   const dv=document.getElementById("et-due").value; t.due=dv?new Date(dv).toISOString():null;
+  const pv=document.getElementById("et-planned").value; t.planned=pv||null;
   const rv=document.getElementById("et-rem").value; t.reminder=rv?new Date(rv).toISOString():null;
   scheduleReminders(); closeModalForce(); render();
 }
@@ -1634,6 +1735,551 @@ function updateBellBadge() {
   else if (badge) badge.remove();
 }
 
+// — Daglig oppfølging: uferdige oppgaver fra tidligere dager —
+function yesterdayTodos() {
+  const todayKey = dateKey(new Date());
+  return S.todos.filter(t => !t.archived && !t.completed && t.planned && t.planned < todayKey);
+}
+function maybeShowDailyReview() {
+  const open = yesterdayTodos();
+  if (!open.length) return;
+  const todayKey = dateKey(new Date());
+  if (S.lastReviewDay === todayKey) return; // allerede vist i dag
+  // Vis kun etter valgt tidspunkt (standard 08:30)
+  const rt = (S.reviewTime || "08:30").split(":");
+  const now = new Date();
+  if (now.getHours() < parseInt(rt[0], 10) || (now.getHours() === parseInt(rt[0], 10) && now.getMinutes() < parseInt(rt[1], 10))) return;
+  S.lastReviewDay = todayKey;
+  openDailyReview(open);
+}
+function openDailyReview() {
+  const open = yesterdayTodos();
+  if (!open.length) return;
+  openModal(`<div class="modal" onclick="event.stopPropagation()" style="width:520px">
+    <div class="modal-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Fullførte du oppgavene dine fra tidligere dager?
+      <span style="margin-left:auto;font-size:10.5px;font-weight:500;color:var(--on-surface-2)">Vises daglig kl.
+        <input type="time" value="${S.reviewTime || "08:30"}" onchange="S.reviewTime=this.value;saveState()" style="background:var(--input-bg);border:1px solid var(--input-border);border-radius:5px;color:var(--on-surface);font-family:inherit;font-size:11px;padding:2px 5px">
+      </span>
+    </div>
+    <p style="font-size:12px;color:var(--on-surface-2);margin-bottom:14px">Disse ble planlagt men er ikke krysset ut. Ta stilling til hver av dem:</p>
+    <div style="max-height:46vh;overflow-y:auto">
+      ${open.map(t => `<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--surface-1);border:1px solid var(--card-border);border-radius:9px;margin-bottom:6px">
+        <span class="tag" style="background:var(--bfc-brand-fade);color:var(--bfc-theme);border:1px solid var(--bfc-theme);flex-shrink:0">${formatPlanned(t.planned)}</span>
+        <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
+        <button class="btn btn-sm" style="color:var(--bfc-theme)" onclick="reviewDone(${t.id})" title="Fullført">✓</button>
+        <button class="btn btn-sm" onclick="reviewUnplan(${t.id})" title="Tilbake til innboksen">↩</button>
+        <button class="btn btn-sm btn-filled" onclick="reviewReschedule(${t.id})" title="Legg på en ny dag">📅</button>
+      </div>`).join("")}
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <button class="btn btn-sm btn-flat" onclick="reviewDismiss()">Jeg ser på det senere</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="reviewUnplanAll()">Alle tilbake til innboks</button>
+        <button class="btn btn-sm btn-filled" onclick="reviewRedistribute()">Fordel resten på uka</button>
+      </div>
+    </div>
+  </div>`);
+}
+function reviewDone(id) {
+  const t = S.todos.find(t => t.id === id); if (!t) return;
+  t.completed = true; t.completedAt = Date.now();
+  afterReviewAction(id);
+}
+function reviewUnplan(id) {
+  const t = S.todos.find(t => t.id === id); if (!t) return;
+  t.planned = null; t.plannedTime = null;
+  afterReviewAction(id);
+}
+function reviewReschedule(id) {
+  const t = S.todos.find(t => t.id === id); if (!t) return;
+  t.planned = null; t.plannedTime = null;
+  closeModalForce();
+  render();
+  calWeekOffset = 0;
+  S.view = "calendar"; render();
+  showToast("Flyttet til innboksen", "Dra " + t.title + " inn på ønsket dag", "ok");
+}
+function reviewUnplanAll() {
+  yesterdayTodos().forEach(t => { t.planned = null; t.plannedTime = null; });
+  closeModalForce(); render();
+  showToast("Tilbake i innboksen", "Alle uferdige oppgaver ligger i innboksen i Week Plan", "ok");
+}
+function reviewRedistribute() {
+  const open = yesterdayTodos();
+  if (!open.length) return;
+  // Fordel utover resten av denne uken (eller neste uke hvis helg)
+  const base = new Date(); base.setHours(0, 0, 0, 0);
+  let days = [];
+  const dow = (base.getDay() + 6) % 7; // 0=mandag
+  const weekdaysLeft = 4 - dow; // torsdag er siste fordelingsdag (fre = buffer)
+  if (weekdaysLeft > 0) {
+    for (let i = 1; i <= weekdaysLeft; i++) { const d = new Date(base); d.setDate(d.getDate() + i); if (d.getDay() !== 0 && d.getDay() !== 6) days.push(d); }
+  }
+  if (days.length < open.length) {
+    // ikke nok dager igjen — bruk neste uke (mandag til fredag)
+    const next = startOfWeek(base); next.setDate(next.getDate() + 7);
+    while (days.length < open.length) {
+      [0, 1, 2, 3, 4].forEach(i => { const d = new Date(next); d.setDate(d.getDate() + i); days.push(d); });
+    }
+  }
+  open.forEach((t, i) => { t.planned = dateKey(days[i % days.length]); t.plannedTime = null; });
+  closeModalForce(); render();
+  showToast("Fordelt på ny", open.length + " oppgave(r) lagt på kommende dager — se Week Plan", "ok");
+}
+function reviewDismiss() {
+  closeModalForce();
+  saveState();
+}
+function afterReviewAction(id) {
+  if (yesterdayTodos().length) { closeModalForce(); openDailyReview(); }
+  else { closeModalForce(); }
+  render();
+}
+
+// — Ukesammendrag (AI) —
+let summaryLoading = false;
+function openWeeklySummary() {
+  if (summaryLoading) return;
+  summaryLoading = true;
+  openModal(`<div class="modal" onclick="event.stopPropagation()" style="width:520px">
+    <div class="modal-title">Ukesammendrag</div>
+    <div style="padding:20px 0;text-align:center;color:var(--on-surface-2);font-size:13px">
+      <div style="margin-bottom:8px">Genererer sammendraget ditt…</div>
+      <div style="font-size:11.5px;opacity:.7">Baseres på fullførte oppgaver, utsatte oppgaver${calEventsForWeek().status === "done" ? " og møtene dine" : ""} fra siste 7 dager</div>
+    </div>
+  </div>`);
+  fetch("/api/weekly-summary")
+    .then(r => r.ok ? r.json() : r.json().then(j => Promise.reject(new Error(j.error || "HTTP " + r.status))))
+    .then(data => {
+      summaryLoading = false;
+      const sections = { "FULLFØRT": [], "MØTER": [], "UFERDIG": [], "KOMMENDE": [] };
+      let current = null;
+      data.summary.split("\n").forEach(line => {
+        const t = line.trim();
+        if (!t || t === "---") return;
+        const match = t.toUpperCase().replace(/[:]/g, "");
+        if (sections[match] !== undefined) { current = match; return; }
+        if (current) sections[current].push(t.replace(/^[-•*]\s*/, ""));
+      });
+      const sec = (label, items, color, icon) => !items.length ? "" : `
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+            <span style="font-size:13px">${icon}</span>
+            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:${color}">${label}</span>
+            <div style="flex:1;height:1px;background:var(--divider)"></div>
+          </div>
+          ${items.map(i => `<div style="display:flex;gap:8px;padding:3px 0;font-size:12.5px;color:var(--on-surface);line-height:1.5">
+            <span style="color:${color};flex-shrink:0">•</span><span>${esc(i)}</span>
+          </div>`).join("")}
+        </div>`;
+      const body =
+        sec("Fullført", sections["FULLFØRT"], "var(--bfc-theme)", "✓") +
+        sec("Møter", sections["MØTER"], "#a78bfa", "🗓") +
+        sec("Uferdig", sections["UFERDIG"], "var(--err)", "⚠") +
+        sec("Kommende", sections["KOMMENDE"], "var(--on-surface-2)", "→");
+      openModal(`<div class="modal" onclick="event.stopPropagation()" style="width:540px">
+        <div class="modal-title">Din uke som var</div>
+        <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+          <span class="tag" style="background:var(--bfc-brand-fade);color:var(--bfc-theme);border:1px solid var(--bfc-theme)">✓ ${data.stats.done} fullført</span>
+          ${data.stats.meetings ? `<span class="tag" style="background:rgba(99,28,206,0.12);color:#a78bfa;border:1px solid rgba(99,28,206,0.35)">🗓 ${data.stats.meetings} møter</span>` : ""}
+          <span class="tag" style="background:var(--bfc-alert-fade);color:var(--bfc-alert-fade-c);border:1px solid var(--bfc-alert)">⚠️ ${data.stats.missed} uferdig</span>
+          ${data.stats.upcoming ? `<span class="tag tag-p4">${data.stats.upcoming} kommende</span>` : ""}
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:var(--on-surface)">${body || "Ingen aktivitet å rapportere denne uken."}</div>
+        <div class="modal-footer">
+          <button class="btn btn-sm btn-flat" onclick="copySummary(this)">Kopier</button>
+          <button class="btn btn-filled" onclick="closeModalForce()">Lukk</button>
+        </div>
+      </div>`);
+    })
+    .catch(err => {
+      summaryLoading = false;
+      closeModalForce();
+      showToast("Kunne ikke lage sammendrag", err.message, "alert");
+    });
+}
+function copySummary(btn) {
+  const text = document.querySelector("#modal-root .modal div[style*='line-height']")?.innerText || "";
+  navigator.clipboard?.writeText(text).then(() => { btn.textContent = "Kopiert!"; setTimeout(() => btn.textContent = "Kopier", 1500); }).catch(() => {});
+}
+
+
+let calWeekOffset = 0;
+let calDragId = null;
+const CAL_DAY_NAMES = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
+const CAL_SLOTS = []; for (let h = 7; h <= 20; h++) CAL_SLOTS.push(h);
+
+function dateKey(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function startOfWeek(d) {
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); // mandag først
+  return x;
+}
+function calWeekStart() {
+  const s = startOfWeek(new Date());
+  s.setDate(s.getDate() + calWeekOffset * 7);
+  return s;
+}
+function isoWeek(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  return Math.ceil((((dt - y0) / 86400000) + 1) / 7);
+}
+function formatPlanned(key) {
+  const d = new Date(key + "T00:00");
+  return d.toLocaleDateString("no", { weekday: "short", day: "numeric", month: "short" });
+}
+function slotLabel(h) { return String(h).padStart(2, "0") + ":00"; }
+function hourOf(time) { return time ? parseInt(time.split(":")[0], 10) : -1; }
+const CAL_START = 7, CAL_END = 20;
+const CAL_PXMIN = 56 / 60; // piksler per minutt (56px = 1 time)
+function hhmm2min(s) { const [a, b] = String(s).split(":").map(Number); return a * 60 + (b || 0); }
+function minToHHMM(m) { const tot = CAL_START * 60 + m; return String(Math.floor(tot / 60)).padStart(2, "0") + ":" + String(tot % 60).padStart(2, "0"); }
+function durLabel(min) { if (min < 60) return min + " min"; const h = Math.floor(min / 60), r = min % 60; return h + "t" + (r ? " " + r + "min" : ""); }
+
+// — Outlook-møter (lese-sync) —
+let calEventsCache = {}; // weekStartKey -> { status, events }
+function calEventsForWeek() {
+  const wk = dateKey(calWeekStart());
+  if (!calEventsCache[wk]) return { status: "idle", events: [] };
+  return calEventsCache[wk];
+}
+function loadCalEvents() {
+  const wk = dateKey(calWeekStart());
+  const entry = calEventsCache[wk];
+  if (entry && (entry.status === "done" || entry.status === "loading" || entry.status === "nolist")) return;
+  calEventsCache[wk] = { status: "loading", events: [] };
+  const start = calWeekStart();
+  const end = new Date(start); end.setDate(end.getDate() + 7);
+  fetch(`/api/events?start=${dateKey(start)}&end=${dateKey(end)}`)
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+    .then(data => {
+      const status = data.connected ? "done" : "nolist";
+      calEventsCache[wk] = { status, events: data.events || [] };
+      if (S.view === "calendar" && dateKey(calWeekStart()) === wk) render();
+    })
+    .catch(() => { calEventsCache[wk] = { status: "error", events: [] }; });
+}
+function meetHour(ev) { return ev.start ? parseInt(ev.start.slice(11, 13), 10) : -1; }
+function meetDayKey(ev) { return ev.start ? ev.start.slice(0, 10) : null; }
+function meetTimeLabel(ev) {
+  if (ev.allDay) return "Hele dagen";
+  const s = ev.start ? ev.start.slice(11, 16) : "";
+  const e = ev.end ? ev.end.slice(11, 16) : "";
+  return s && e ? s + "–" + e : s;
+}
+function calMeetCard(ev) {
+  return `<div class="cal-meet${ev.busy ? " busy" : ""}" title="${esc(ev.subject)}">
+    <div class="cal-meet-time">🗓 ${esc(meetTimeLabel(ev))}</div>
+    <div class="cal-meet-title">${esc(ev.subject)}</div>
+  </div>`;
+}
+
+// Inside the editor Preview the app is served under /proxy/<port>/, so all
+// internal links must keep that prefix to stay on the app.
+const PROXY_BASE = location.pathname.match(/^\/proxy\/\d+/) ? location.pathname.match(/^\/proxy\/\d+/)[0] : "";
+
+function renderCalendarView() {
+  const start = calWeekStart();
+  const todayKey = dateKey(new Date());
+  const end = new Date(start); end.setDate(end.getDate() + 6);
+  if (typeof S.showWeekend !== "boolean") S.showWeekend = false;
+  const dayCount = S.showWeekend ? 7 : 5;
+
+  const inbox = S.todos.filter(t => !t.archived && !t.completed && !t.planned && !isPostponeWaiting(t))
+    .sort((a, b) => a.priority - b.priority);
+
+  loadCalEvents();
+  const cal = calEventsForWeek();
+
+  let h = `<div class="cal-toolbar">
+    <button class="btn btn-sm" onclick="calShift(-1)">‹ Forrige uke</button>
+    <button class="btn btn-sm${calWeekOffset === 0 ? " btn-filled" : ""}" onclick="calReset()">Denne uken</button>
+    <button class="btn btn-sm" onclick="calShift(1)">Neste uke ›</button>
+    <span class="cal-range">${start.getDate()}.${start.getMonth() + 1}. – ${end.getDate()}.${end.getMonth() + 1}.</span>
+    <span class="cal-week-badge">Uke ${isoWeek(start)}</span>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm" onclick="openDailyReview()" title="Oppfølging av uferdige oppgaver">↩ Oppfølging</button>
+    <button class="btn btn-sm btn-filled" onclick="openWeeklySummary()" title="AI-generert sammendrag av uken">✨ Ukesammendrag</button>
+  </div>`;
+
+  if (cal.status === "nolist") {
+    h += `<div class="cal-connect-hint">🗓 Vil du se Outlook-/Teams-møtene dine her i planen?
+      <a href="${PROXY_BASE}/auth/login" target="_blank" rel="noopener">Koble til Microsoft-kalenderen</a> — lenken åpner i ny fane. Møtene vises da automatisk, og todo-ene dine fordeles rundt dem.
+    </div>`;
+  } else if (cal.status === "error") {
+    h += `<div class="cal-connect-hint">Kunne ikke hente kalenderen din akkurat nå — prøv å laste siden på nytt.</div>`;
+  }
+
+  h += `<div class="cal-inbox" ondragover="onCalInboxDragOver(event)" ondragleave="onCalInboxDragLeave(event)" ondrop="onCalDrop(event,'',null)">
+    <div class="cal-inbox-label">📥 Uplanlagte oppgaver — dra en oppgave til en dag eller et tidspunkt</div>
+    <div class="cal-inbox-chips">
+      ${inbox.length
+        ? inbox.map(t => calCard(t, false)).join("")
+        : `<div class="cal-inbox-hint">Alle aktive oppgaver er fordelt på uken. Flott! 🎉</div>`}
+    </div>
+  </div>`;
+
+  const totalMin = (CAL_END - CAL_START) * 60;
+  h += `<div class="cal-scroll"><div class="cal-grid" style="grid-template-columns:repeat(${dayCount},1fr) 34px">`;
+  for (let i = 0; i < dayCount; i++) {
+    const d = new Date(start); d.setDate(d.getDate() + i);
+    const key = dateKey(d);
+    const dayTodos = S.todos.filter(t => !t.archived && t.planned === key);
+    const dayMeets = cal.events.filter(ev => meetDayKey(ev) === key);
+    const alldayTodos = dayTodos.filter(t => !t.plannedTime)
+      .sort((a, b) => (a.completed - b.completed) || (a.priority - b.priority));
+    const alldayMeets = dayMeets.filter(ev => ev.allDay);
+    const timedTodos = dayTodos.filter(t => t.plannedTime);
+    const timedMeets = dayMeets.filter(ev => !ev.allDay && ev.start);
+    h += `<div class="cal-day${key === todayKey ? " cal-today" : ""}" data-day="${key}">
+      <div class="cal-day-head">
+        <span class="cal-day-name">${CAL_DAY_NAMES[i]}${key === todayKey ? " · i dag" : ""}</span>
+        <span class="cal-day-num">${d.getDate()}.${d.getMonth() + 1}.</span>
+        <span class="cal-day-count">${dayTodos.length}${dayMeets.length ? " · " + dayMeets.length + " møte" + (dayMeets.length !== 1 ? "er" : "") : ""}</span>
+        <button class="cal-add-btn" onclick="openAddTodoForDay('${key}')" title="Ny oppgave denne dagen">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="cal-allday" ondragover="onCalZoneDragOver(event)" ondragleave="onCalZoneDragLeave(event)" ondrop="onCalDropAllDay(event,'${key}')">
+        <div class="cal-allday-label">Hele dagen</div>
+        ${alldayMeets.map(ev => calMeetCard(ev)).join("")}
+        ${alldayTodos.length ? alldayTodos.map(t => calCard(t, true)).join("") : (!alldayMeets.length ? `<div class="cal-day-empty" style="padding:2px 2px 4px">—</div>` : "")}
+      </div>
+      <div class="cal-day-body" id="calbody-${key}" style="height:${Math.round(totalMin * CAL_PXMIN)}px"
+        ondragover="onCalZoneDragOver(event)" ondragleave="onCalZoneDragLeave(event)" ondrop="onCalDropBody(event,'${key}')">
+        ${CAL_SLOTS.map(hr => `<div class="cal-hourline" style="top:${(hr - CAL_START) * 56}px"><span>${slotLabel(hr)}</span></div>`).join("")}
+        ${timedMeets.map(ev => calMeetEv(ev, totalMin)).join("")}
+        ${timedTodos.map(t => calEvCard(t, key, totalMin)).join("")}
+      </div>
+    </div>`;
+  }
+  h += `<div class="cal-wk-col"><button class="cal-wk-toggle" onclick="toggleWeekend()" title="${S.showWeekend ? "Skjul helg" : "Vis helg"}">
+    ${S.showWeekend
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 3 12 9 6"/></svg>Skjul helg`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 6 21 12 15 18"/></svg>Vis helg`}
+  </button></div>`;
+  h += `</div></div>`;
+  return h;
+}
+
+function calCard(t, inDay) {
+  const proj = S.projects.find(p => p.id === t.project);
+  return `<div class="cal-card priority-${t.priority}${t.completed ? " done" : ""}" id="cal-card-${t.id}"
+    draggable="true" ondragstart="onCalDragStart(event,${t.id})" ondragend="onCalDragEnd()">
+    <div class="todo-check${t.completed ? " checked" : ""}" onclick="toggleTodo(${t.id})">
+      <svg viewBox="0 0 12 12" fill="none" stroke="#071627" stroke-width="2.5" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg>
+    </div>
+    <div class="cal-card-body" onclick="openEditTodo(${t.id})" title="${esc(t.title)}">
+      <div class="cal-card-title">${t.plannedTime ? `<span style="color:var(--bfc-theme);font-weight:700">${esc(t.plannedTime)}</span> ` : ""}${esc(t.title)}</div>
+      ${proj ? `<span class="tag" style="background:${proj.color}22;color:${proj.color};border:1px solid ${proj.color}33">${esc(proj.name)}</span>` : ""}
+      <span class="tag tag-p${t.priority}" style="margin-top:2px">${PRIORITY_LABELS[t.priority]}</span>
+    </div>
+    ${inDay ? `<button class="cal-unplan" onclick="unplanTodo(${t.id})" title="Fjern fra dagen">×</button>` : ""}
+  </div>`;
+}
+
+function calShift(n) { calWeekOffset += n; render(); }
+function calReset() { calWeekOffset = 0; render(); }
+function toggleWeekend() { S.showWeekend = !S.showWeekend; render(); }
+function unplanTodo(id) {
+  const t = S.todos.find(t => t.id === id); if (!t) return;
+  t.planned = null; t.plannedTime = null; render();
+}
+
+function onCalDragStart(e, id) {
+  calDragId = id;
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", String(id));
+  setTimeout(() => { const el = document.getElementById("cal-card-" + id); if (el) el.classList.add("dragging"); }, 0);
+}
+function onCalDragEnd() {
+  calDragId = null;
+  document.querySelectorAll(".cal-card.dragging").forEach(el => el.classList.remove("dragging"));
+}
+function onCalZoneDragOver(e) { e.preventDefault(); e.currentTarget.classList.add("cal-drop-hover"); }
+function onCalZoneDragLeave(e) { e.currentTarget.classList.remove("cal-drop-hover"); }
+function onCalInboxDragOver(e) { e.preventDefault(); e.currentTarget.style.borderColor = "var(--bfc-theme)"; }
+function onCalInboxDragLeave(e) { e.currentTarget.style.borderColor = ""; }
+
+// Slipp fra innboksen (HTML5-drag) på et tidspunkt i en dag — tiden regnes
+// ut fra hvor i kolonnen du slipper, snapset til 15 minutter.
+function onCalDropBody(e, key) {
+  e.preventDefault(); e.stopPropagation();
+  e.currentTarget.classList.remove("cal-drop-hover");
+  if (calDragId == null) return;
+  const t = S.todos.find(t => t.id === calDragId); if (!t) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  let tMin = Math.round(((e.clientY - rect.top) / CAL_PXMIN) / 15) * 15;
+  if (!t.plannedDur) t.plannedDur = 60;
+  tMin = Math.max(0, Math.min((CAL_END - CAL_START) * 60 - t.plannedDur, tMin));
+  t.planned = key; t.plannedTime = minToHHMM(tMin);
+  render();
+  showToast("Planlagt", formatPlanned(key) + " " + t.plannedTime + " · " + durLabel(t.plannedDur), "ok");
+}
+function onCalDropAllDay(e, key) {
+  e.preventDefault(); e.stopPropagation();
+  e.currentTarget.classList.remove("cal-drop-hover");
+  e.currentTarget.style.borderColor = "";
+  if (calDragId == null) return;
+  const t = S.todos.find(t => t.id === calDragId); if (!t) return;
+  t.planned = key; t.plannedTime = null; t.plannedDur = null;
+  render();
+  showToast("Planlagt hele dagen", t.title, "ok");
+}
+
+// — Dra og strekk todo-blokker (pekere: mus og touch) —
+let calPtr = null;
+let calSuppressClick = false;
+function calEvOpen(id) { if (calSuppressClick) return; openEditTodo(id); }
+function calEvPointerDown(e, id) {
+  if (e.target.closest(".todo-check") || e.target.closest(".cal-unplan")) return;
+  const card = e.currentTarget;
+  e.preventDefault();
+  const rect = card.getBoundingClientRect();
+  calPtr = {
+    id,
+    mode: e.target.closest(".cal-ev-resize") ? "resize" : "move",
+    startX: e.clientX, startY: e.clientY,
+    grabDy: e.clientY - rect.top,
+    moved: false, card,
+  };
+  try { card.setPointerCapture(e.pointerId); } catch (err) {}
+  document.addEventListener("pointermove", calEvPointerMove);
+  document.addEventListener("pointerup", calEvPointerUp);
+  document.addEventListener("pointercancel", calEvPointerUp);
+}
+function calEvPointerMove(e) {
+  if (!calPtr) return;
+  if (Math.abs(e.clientY - calPtr.startY) > 4 || Math.abs(e.clientX - calPtr.startX) > 6) calPtr.moved = true;
+  const card = calPtr.card;
+  const body = document.getElementById("calbody-" + card.dataset.day);
+  if (!body) return;
+  const bodyRect = body.getBoundingClientRect();
+  if (calPtr.mode === "resize") {
+    const topMin = parseFloat(card.style.top) / CAL_PXMIN;
+    let hMin = Math.round(((e.clientY - bodyRect.top) / CAL_PXMIN - topMin) / 15) * 15;
+    hMin = Math.max(15, hMin);
+    card.style.height = (hMin * CAL_PXMIN - 3) + "px";
+    calPtr.durMin = hMin;
+  } else {
+    let tMin = Math.round(((e.clientY - calPtr.grabDy - bodyRect.top) / CAL_PXMIN) / 15) * 15;
+    tMin = Math.max(0, Math.min((CAL_END - CAL_START) * 60 - 15, tMin));
+    card.style.top = (tMin * CAL_PXMIN) + "px";
+    card.classList.add("cal-ev-live");
+    card.style.transform = `translateX(${Math.round((e.clientX - calPtr.startX) / 2)}px)`;
+    calPtr.tMin = tMin;
+  }
+}
+function calEvPointerUp(e) {
+  const p = calPtr; calPtr = null;
+  document.removeEventListener("pointermove", calEvPointerMove);
+  document.removeEventListener("pointerup", calEvPointerUp);
+  document.removeEventListener("pointercancel", calEvPointerUp);
+  if (!p) return;
+  if (!p.moved) return; // det var et klikk, ikke dra — la klikket gå igjennom
+  calSuppressClick = true; setTimeout(() => calSuppressClick = false, 300);
+  const t = S.todos.find(x => x.id === p.id);
+  if (!t) { render(); return; }
+  if (p.mode === "resize") {
+    t.plannedDur = p.durMin || t.plannedDur || 60;
+    render();
+    showToast("Varighet oppdatert", durLabel(t.plannedDur) + " · " + t.title, "ok");
+    return;
+  }
+  // Finn dagen du slapp over
+  const els = document.elementsFromPoint(e.clientX, e.clientY) || [];
+  let dayEl = null;
+  for (const el of els) { const c = el.closest ? el.closest(".cal-day") : null; if (c && c.dataset.day) { dayEl = c; break; } }
+  const dayKey = dayEl ? dayEl.dataset.day : p.card.dataset.day;
+  const body = (dayEl ? dayEl.querySelector(".cal-day-body") : document.getElementById("calbody-" + p.card.dataset.day));
+  if (!body) { render(); return; }
+  const bodyRect = body.getBoundingClientRect();
+  let tMin = Math.round(((e.clientY - p.grabDy - bodyRect.top) / CAL_PXMIN) / 15) * 15;
+  const dur = t.plannedDur || 60;
+  tMin = Math.max(0, Math.min((CAL_END - CAL_START) * 60 - dur, tMin));
+  const same = t.planned === dayKey && t.plannedTime === minToHHMM(tMin);
+  t.planned = dayKey;
+  t.plannedTime = minToHHMM(tMin);
+  render();
+  if (!same) showToast("Flyttet", formatPlanned(dayKey) + " " + t.plannedTime, "ok");
+}
+
+function calEvCard(t, dayKey, totalMin) {
+  const dur = t.plannedDur || 60;
+  const m = Math.max(0, hhmm2min(t.plannedTime) - CAL_START * 60);
+  const height = Math.min(dur, totalMin - m) * CAL_PXMIN - 3;
+  const endM = Math.min(m + dur, totalMin);
+  return `<div class="cal-ev priority-${t.priority}${t.completed ? " done" : ""}" data-day="${dayKey}" data-todo="${t.id}"
+    style="top:${Math.round(m * CAL_PXMIN)}px;height:${Math.max(Math.round(height), 16)}px"
+    onpointerdown="calEvPointerDown(event,${t.id})">
+    <div class="todo-check${t.completed ? " checked" : ""}" onclick="event.stopPropagation();toggleTodo(${t.id})">
+      <svg viewBox="0 0 12 12" fill="none" stroke="#071627" stroke-width="2.5" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg>
+    </div>
+    <div class="cal-ev-body" onclick="calEvOpen(${t.id})" title="${esc(t.title)}">
+      <div class="cal-ev-time">${t.plannedTime}–${minToHHMM(endM)} · ${durLabel(dur)}</div>
+      <div class="cal-card-title">${esc(t.title)}</div>
+    </div>
+    <button class="cal-unplan" onclick="event.stopPropagation();unplanTodo(${t.id})" title="Fjern fra dagen">×</button>
+    <div class="cal-ev-resize" title="Dra for å endre varighet"></div>
+  </div>`;
+}
+function calMeetEv(ev, totalMin) {
+  const s = hhmm2min(ev.start.slice(11, 16)) - CAL_START * 60;
+  const e2 = ev.end ? hhmm2min(ev.end.slice(11, 16)) : s + 60;
+  const m = Math.max(0, s);
+  const dur = Math.max(e2 - s, 15);
+  const height = Math.min(dur, totalMin - m) * CAL_PXMIN - 3;
+  return `<div class="cal-ev cal-meet${ev.busy ? " busy" : ""}" style="top:${Math.round(m * CAL_PXMIN)}px;height:${Math.max(Math.round(height), 16)}px" title="${esc(ev.subject)}">
+    <div class="cal-ev-body">
+      <div class="cal-ev-time">🗓 ${esc(meetTimeLabel(ev))}</div>
+      <div class="cal-meet-title">${esc(ev.subject)}</div>
+    </div>
+  </div>`;
+}
+
+function openAddTodoForDay(dateKeyStr) {
+  openModal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Ny oppgave — ${formatPlanned(dateKeyStr)}</div>
+    <div class="form-group"><label class="form-label">Tittel</label>
+      <input class="form-input" id="cd-title" placeholder="Hva skal gjøres?"></div>
+    <div class="form-group"><label class="form-label">Tidspunkt</label>
+      <select class="form-input" id="cd-time">
+        <option value="">Hele dagen</option>
+        ${CAL_SLOTS.map(h => `<option value="${slotLabel(h)}">${slotLabel(h)}</option>`).join("")}
+      </select></div>
+    <div class="form-group"><label class="form-label">Varighet</label>
+      <select class="form-input" id="cd-dur">
+        ${[15, 30, 45, 60, 90, 120, 180, 240].map(m => `<option value="${m}"${m === 60 ? " selected" : ""}>${durLabel(m)}</option>`).join("")}
+      </select></div>
+    <div class="form-group"><label class="form-label">Prioritet</label>
+      <select class="form-input" id="cd-priority">
+        <option value="1">🔴 Critical</option>
+        <option value="2">🟠 High</option>
+        <option value="3" selected>🟡 Medium</option>
+        <option value="4">⚪ Low</option>
+      </select></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModalForce()">Avbryt</button>
+      <button class="btn btn-filled" onclick="saveTodoForDay('${dateKeyStr}')">Legg til</button>
+    </div>
+  </div>`);
+  setTimeout(() => document.getElementById("cd-title")?.focus(), 50);
+}
+function saveTodoForDay(dateKeyStr) {
+  const title = document.getElementById("cd-title")?.value.trim(); if (!title) return;
+  const time = document.getElementById("cd-time")?.value || null;
+  const dur = parseInt(document.getElementById("cd-dur")?.value) || 60;
+  const priority = parseInt(document.getElementById("cd-priority")?.value) || 3;
+  S.todos.unshift({ id: S.nextId++, title, priority, project: "", due: null, reminder: null, completed: false, archived: false, daily: false, subtodos: [], notes: "", files: [], expanded: false, expandTab: "subtodos", created: Date.now(), planned: dateKeyStr, plannedTime: time, plannedDur: time ? dur : null });
+  closeModalForce(); render();
+  showToast("Oppgave lagt til", title, "ok");
+}
+
 // ══════════════════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════════════════
@@ -1679,6 +2325,7 @@ async function boot() {
   scheduleReminders();
   schedulePostpones();
   render();
+  setTimeout(maybeShowDailyReview, 1200);
 
   const params = new URLSearchParams(location.search);
   const joined = params.get("joined");
